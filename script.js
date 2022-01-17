@@ -6,6 +6,31 @@ class Model {
 			{id:2, text: 'Be nice', complete: false}
 		]
 	}
+
+	addTask(taskText){
+		// create id
+		let id
+		if(this.tasks.length > 0){
+			id = this.tasks[this.tasks.length - 1].id + 1
+		} else {
+			id = 1
+		}
+		// create task object
+		const task = {
+			id: id,
+			text: taskText,
+			complete: false
+		}
+		// add task to this.tasks
+		this.tasks.push(task)
+		// callback changed controll
+		this.onTaskListChanged(this.tasks)
+	}
+
+	//
+	taskListChanged(callback){
+		this.onTaskListChanged = callback
+	}
 }
 
 class View {
@@ -16,15 +41,36 @@ class View {
 		// title
 		this.title = this.setElement('h1')
 		this.title.textContent = 'Tasks'
+		// form
+		this.form = this.setElement('form')
+		// form input
+		this.input = this.setElement('input')
+		this.input.type = 'text'
+		this.input.name = 'task'
+		this.input.placeholder = 'Add new task'
+		// submit button
+		this.submitButton = this.setElement('button')
+		this.submitButton.textContent = 'Add task'
+		// add input and button to form
+		this.form.append(this.input, this.submitButton)
+
 		// tasks list
 		this.taskList = this.setElement('ul')
 		// append title and task list to app
-		this.app.append(this.title, this.taskList)
+		this.app.append(this.title, this.form, this.taskList)
 	}
 
 	// display tasks
 	displayTasks(tasks){
-		tasks.forEach(task => {
+		// delete all tasks before displaying
+		while(this.taskList.firstChild){
+			this.taskList.removeChild(this.taskList.firstChild)
+		}
+		if(tasks.length === 0){
+			const p = this.setElement('p')
+			p.textContent = 'Add a task if there is nothing to do'
+			this.taskList.append(p)
+		} else {tasks.forEach(task => {
 			//create li
 			const li = this.setElement('li')
 			li.id = task.id
@@ -42,10 +88,24 @@ class View {
 			} else {
 				span.textContent = task.text
 			}
+			// delete button
+			const deleteButton = this.setElement('button', 'delete')
+			deleteButton.textContent = 'Delete'
 			// append checkboc and span to li
-			li.append(checkbox, span)
+			li.append(checkbox, span, deleteButton)
 			// append created li to task list
 			this.taskList.append(li)
+		})}
+	}
+
+	// events
+	addTask(handler){
+		this.form.addEventListener('submit', event => {
+			event.preventDefault()
+			if(this._taskText){
+				handler(this._taskText)
+				this.resetInput()
+			}
 		})
 	}
 
@@ -53,6 +113,10 @@ class View {
 	getElement(selector){
 		const element = document.querySelector(selector)
 		return element
+	}
+
+	get _taskText(){
+		return this.input.value
 	}
 
 	// setters
@@ -63,6 +127,11 @@ class View {
 		}
 		return element
 	}
+
+	// resetter
+	resetInput(){
+		this.input.value = ''
+	}
 }
 
 class Controller {
@@ -70,11 +139,18 @@ class Controller {
 		this.model = model
 		this.view = view
 
+		this.model.taskListChanged(this.displayTasks)
+		this.view.addTask(this.handleAddTask)
+
 		this.displayTasks(this.model.tasks)
 	}
 
 	displayTasks = tasks => {
 		this.view.displayTasks(tasks)
+	}
+
+	handleAddTask = taskText => {
+		this.model.addTask(taskText)
 	}
 }
 
