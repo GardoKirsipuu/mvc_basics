@@ -3,7 +3,8 @@ class Model {
 		// data
 		this.tasks = [
 			{id:1, text: 'Be good', complete: false},
-			{id:2, text: 'Be nice', complete: false}
+			{id:2, text: 'Be nice', complete: false},
+			{id:3, text: 'Be awesome', complete: false}
 		]
 	}
 
@@ -27,9 +28,12 @@ class Model {
 		this.onTaskListChanged(this.tasks)
 	}
 
-	//
 	taskListChanged(callback){
 		this.onTaskListChanged = callback
+	}
+
+	deleteTask(){
+		console.log(this.tasks)
 	}
 }
 
@@ -109,6 +113,15 @@ class View {
 		})
 	}
 
+	deleteTask(handler){
+		this.taskList.addEventListener('click', event => {
+			if(event.target.textContent == 'Delete'){
+				console.log(event.target.parentElement.id)
+				event.target.parentElement.remove()
+			}
+		})
+	}
+
 	// getters
 	getElement(selector){
 		const element = document.querySelector(selector)
@@ -141,6 +154,7 @@ class Controller {
 
 		this.model.taskListChanged(this.displayTasks)
 		this.view.addTask(this.handleAddTask)
+		this.view.deleteTask(this.handleDeleteTask)
 
 		this.displayTasks(this.model.tasks)
 	}
@@ -151,6 +165,10 @@ class Controller {
 
 	handleAddTask = taskText => {
 		this.model.addTask(taskText)
+	}
+
+	handleDeleteTask = text => {
+		this.model.deleteTask(text)
 	}
 }
 
